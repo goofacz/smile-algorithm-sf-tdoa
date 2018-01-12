@@ -70,7 +70,7 @@ network single_stationary_mobile_node
         }
 
         anchorNode3: RadioNode {
-            @display("p=194,245");
+            @display("p=194,232");
             mobilityType = "LinearMobility";
             applicationType = "AnchorApplication";
             nicDriverType = "IdealRangingNicDriver";
@@ -79,7 +79,7 @@ network single_stationary_mobile_node
         }
 
         anchorNode4: RadioNode {
-            @display("p=89,245");
+            @display("p=89,232");
             mobilityType = "LinearMobility";
             applicationType = "AnchorApplication";
             nicDriverType = "IdealRangingNicDriver";
