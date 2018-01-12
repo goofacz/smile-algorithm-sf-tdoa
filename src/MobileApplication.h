@@ -16,7 +16,6 @@
 #pragma once
 
 #include <IdealApplication.h>
-#include <Logger.h>
 
 namespace smile {
 namespace algorithm {
@@ -28,7 +27,7 @@ class MobileApplication : public smile::IdealApplication
   MobileApplication() = default;
   MobileApplication(const MobileApplication& source) = delete;
   MobileApplication(MobileApplication&& source) = delete;
-  ~MobileApplication();
+  ~MobileApplication() = default;
 
   MobileApplication& operator=(const MobileApplication& source) = delete;
   MobileApplication& operator=(MobileApplication&& source) = delete;
@@ -36,13 +35,11 @@ class MobileApplication : public smile::IdealApplication
  private:
   void initialize(int stage) override;
 
-  void handleSelfMessage(cMessage* message) override;
-
   void handleIncommingMessage(cMessage* newMessage) override;
 
-  void handleTxCompletionSignal(const smile::IdealTxCompletion& completion) override;
-
   void handleRxCompletionSignal(const smile::IdealRxCompletion& completion) override;
+
+  Logger::Handle beaconsLog;
 };
 
 }  // namespace sf_tdoa

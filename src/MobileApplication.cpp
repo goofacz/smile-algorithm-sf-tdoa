@@ -14,6 +14,9 @@
 //
 
 #include "MobileApplication.h"
+#include <CsvLogger.h>
+#include <utilities.h>
+#include "BeaconFrame_m.h"
 
 namespace smile {
 namespace algorithm {
@@ -21,34 +24,27 @@ namespace sf_tdoa {
 
 Define_Module(MobileApplication);
 
-MobileApplication::~MobileApplication()
-{
-  // TODO
-}
-
 void MobileApplication::initialize(int stage)
 {
-  // TODO
-}
+  IdealApplication::initialize(stage);
 
-void MobileApplication::handleSelfMessage(cMessage* message)
-{
-  // TODO
+  if (stage == inet::INITSTAGE_LOCAL) {
+    auto& logger = getLogger();
+    beaconsLog = logger.obtainHandle("beacons");
+  }
 }
 
 void MobileApplication::handleIncommingMessage(cMessage* newMessage)
 {
-  // TODO
-}
-
-void MobileApplication::handleTxCompletionSignal(const smile::IdealTxCompletion& completion)
-{
-  // TODO
+  std::unique_ptr<cMessage>{newMessage};
 }
 
 void MobileApplication::handleRxCompletionSignal(const smile::IdealRxCompletion& completion)
 {
-  // TODO
+  const auto frame = omnetpp::check_and_cast<const BeaconFrame*>(completion.getFrame());
+  auto entry = csv_logger::compose(completion, frame->getSequenceNumber());
+  auto& logger = getLogger();
+  logger.append(beaconsLog, entry);
 }
 
 }  // namespace sf_tdoa
