@@ -14,6 +14,7 @@
 //
 
 #include "AnchorApplication.h"
+#include <CsvLogger.h>
 #include <utilities.h>
 #include "BeaconFrame_m.h"
 
@@ -30,6 +31,14 @@ void AnchorApplication::initialize(int stage)
   if (stage == inet::INITSTAGE_LOCAL) {
     beaconReplyDelay = SimTime{par("beaconReplyDelay").longValue(), SIMTIME_MS};
     predecessorAddress = inet::MACAddress{par("predecessorAddress").stringValue()};
+  }
+
+  if (stage == inet::INITSTAGE_PHYSICAL_ENVIRONMENT_2) {
+    auto& logger = getLogger();
+    const auto handle = logger.obtainHandle("anchors");
+    const auto& nicDriver = getNicDriver();
+    const auto entry = csv_logger::compose(nicDriver.getMacAddress(), getCurrentTruePosition());
+    logger.append(handle, entry);
   }
 
   if (stage == inet::INITSTAGE_APPLICATION_LAYER) {
