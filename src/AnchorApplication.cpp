@@ -14,8 +14,8 @@
 //
 
 #include "AnchorApplication.h"
+#include <utilities.h>
 #include "BeaconFrame_m.h"
-#include "utilities.h"
 
 namespace smile {
 namespace algorithm {
