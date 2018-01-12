@@ -20,4 +20,8 @@ simple AnchorApplication extends IdealApplication
 {
     parameters:
         @class(smile::algorithm::sf_tdoa::AnchorApplication);
+        
+        bool initialAnchor = default(false); // Set it true if this anchor instance should start communication
+        int beaconReplyDelay @unit(ms) = default(35ms); // Delay (processing time) between receiving beacon from predecessor and transmitting beacon
+        string predecessorAddress = default(""); // MAC address of predecessor anchor
 }

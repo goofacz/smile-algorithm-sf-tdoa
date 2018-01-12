@@ -16,7 +16,7 @@
 #pragma once
 
 #include <IdealApplication.h>
-#include <Logger.h>
+#include <inet/linklayer/ideal/IdealMacFrame_m.h>
 
 namespace smile {
 namespace algorithm {
@@ -38,9 +38,11 @@ class AnchorApplication : public smile::IdealApplication
 
   void handleIncommingMessage(cMessage* newMessage) override;
 
-  void handleTxCompletionSignal(const smile::IdealTxCompletion& completion) override;
+  void sendBeacon(const SimTime& delay);
 
-  void handleRxCompletionSignal(const smile::IdealRxCompletion& completion) override;
+  SimTime beaconReplyDelay;
+  inet::MACAddress predecessorAddress;
+  unsigned int sequenceNumber{1};
 };
 
 }  // namespace sf_tdoa

@@ -14,6 +14,8 @@
 //
 
 #include "AnchorApplication.h"
+#include "BeaconFrame_m.h"
+#include "utilities.h"
 
 namespace smile {
 namespace algorithm {
@@ -23,22 +25,42 @@ Define_Module(AnchorApplication);
 
 void AnchorApplication::initialize(int stage)
 {
-  // TODO
+  IdealApplication::initialize(stage);
+
+  if (stage == inet::INITSTAGE_LOCAL) {
+    beaconReplyDelay = SimTime{par("beaconReplyDelay").longValue(), SIMTIME_MS};
+    predecessorAddress = inet::MACAddress{par("predecessorAddress").stringValue()};
+  }
+
+  if (stage == inet::INITSTAGE_APPLICATION_LAYER) {
+    // Designated (initiator) anchor sends the very first frame
+    const auto initialAnchor = par("initialAnchor").boolValue();
+    if (initialAnchor) {
+      sendBeacon(0);
+    }
+  }
 }
 
 void AnchorApplication::handleIncommingMessage(cMessage* newMessage)
 {
-  // TODO
+  const auto frame = dynamic_unique_ptr_cast<BeaconFrame>(std::unique_ptr<cMessage>{newMessage});
+  const auto& sourceAddress = frame->getSrc();
+
+  // Reply on frame (i.a. broadcast beacon) only if it was sent by predecessor
+  if (sourceAddress == predecessorAddress) {
+    sendBeacon(beaconReplyDelay);
+  }
 }
 
-void AnchorApplication::handleTxCompletionSignal(const smile::IdealTxCompletion& completion)
+void AnchorApplication::sendBeacon(const SimTime& delay)
 {
-  // TODO
-}
+  auto frame = createFrame<BeaconFrame>(inet::MACAddress::BROADCAST_ADDRESS);
+  frame->setSequenceNumber(sequenceNumber);
+  frame->setBitLength(10);
+  sendDelayed(frame.release(), delay, "out");
 
-void AnchorApplication::handleRxCompletionSignal(const smile::IdealRxCompletion& completion)
-{
-  // TODO
+  // Bump sequence number for next frame
+  sequenceNumber++;
 }
 
 }  // namespace sf_tdoa
