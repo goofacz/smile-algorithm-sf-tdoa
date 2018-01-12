@@ -38,7 +38,7 @@ network single_stationary_mobile_node
 
         logger: Logger {
             @display("p=69,30");
-            fileNamePrefix = "ss_twr";
+            fileNamePrefix = "sf_tdoa";
             overwrite = true;
         }
 
