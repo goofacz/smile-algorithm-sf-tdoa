@@ -15,3 +15,4 @@
 
 import sf_tdoa.algorithm as algorithm
 import sf_tdoa.logger as logger
+import sf_tdoa.__main__ as main

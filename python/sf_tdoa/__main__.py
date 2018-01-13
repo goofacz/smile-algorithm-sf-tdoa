@@ -13,16 +13,17 @@
 # along with this program.  If not, see http:#www.gnu.org/licenses/.
 #
 
-import numpy
+import argparse
+from sf_tdoa.logger import load_beacons, load_nodes
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Process SF-TFoA ranging data.')
+    parser.add_argument('logs_directory_path', type=str, nargs=1, help='Path to directory holding CSV logs')
+    arguments = parser.parse_args()
+    logs_directory_path = arguments.logs_directory_path[0]
 
-def localize_mobile(anchors, beacons):
-    max_sequence_number = numpy.max(beacons['sequence_number'])
+    anchors, mobiles = load_nodes(logs_directory_path)
 
-    for sequence_number in range(1, max_sequence_number):
-        current_beacons = numpy.extract(beacons['sequence_number'] == sequence_number, beacons)
-        if numpy.size(current_beacons) < 3:
-            print("Only {0} beacons with sequence number {1} were received, skipping".format(
-                numpy.size(current_beacons), sequence_number))
-
-
+    for mobile_address in mobiles.get_mac_addresses():
+        beacons = load_beacons(logs_directory_path, mobile_address)
+        pass
