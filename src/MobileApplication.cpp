@@ -28,17 +28,17 @@ void MobileApplication::initialize(int stage)
 {
   IdealApplication::initialize(stage);
 
-  if (stage == inet::INITSTAGE_LOCAL) {
-    auto& logger = getLogger();
-    beaconsLog = logger.obtainHandle("beacons");
-  }
-
   if (stage == inet::INITSTAGE_PHYSICAL_ENVIRONMENT_2) {
     auto& logger = getLogger();
     const auto handle = logger.obtainHandle("mobiles");
     const auto& nicDriver = getNicDriver();
-    const auto entry = csv_logger::compose(nicDriver.getMacAddress(), getCurrentTruePosition());
+    const auto& address = nicDriver.getMacAddress();
+    const auto entry = csv_logger::compose(address, getCurrentTruePosition());
     logger.append(handle, entry);
+
+    std::string handleName {"mobile_"};
+    handleName += address.str();
+    beaconsLog = logger.obtainHandle(handleName);
   }
 }
 
@@ -50,7 +50,7 @@ void MobileApplication::handleIncommingMessage(cMessage* newMessage)
 void MobileApplication::handleRxCompletionSignal(const smile::IdealRxCompletion& completion)
 {
   const auto frame = omnetpp::check_and_cast<const BeaconFrame*>(completion.getFrame());
-  const auto entry = csv_logger::compose(completion, frame->getSequenceNumber(), getCurrentTruePosition());
+  const auto entry = csv_logger::compose(completion, frame->getSrc(), frame->getDest(), frame->getSequenceNumber());
   auto& logger = getLogger();
   logger.append(beaconsLog, entry);
 }
