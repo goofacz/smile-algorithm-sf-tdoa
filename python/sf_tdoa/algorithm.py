@@ -14,15 +14,18 @@
 #
 
 import numpy
+from scipy.spatial.distance import pdist
 
 
 def localize_mobile(anchors, beacons):
-    max_sequence_number = numpy.max(beacons['sequence_number'])
+    max_sequence_number = int(numpy.max(beacons.sequence_numbers))
 
-    for sequence_number in range(1, max_sequence_number):
-        current_beacons = numpy.extract(beacons['sequence_number'] == sequence_number, beacons)
+    for sequence_number in range(1, max_sequence_number + 1):
+        current_beacons = numpy.extract(beacons.sequence_numbers == sequence_number, beacons.sequence_numbers)
         if numpy.size(current_beacons) < 3:
             print("Only {0} beacons with sequence number {1} were received, skipping".format(
                 numpy.size(current_beacons), sequence_number))
 
-
+        anchor_distances = numpy.asarray((pdist(anchors.positions[0:2, 0:2], 'euclidean'),
+                                          pdist(anchors.positions[1:3, 0:2], 'euclidean')))
+        pass
