@@ -36,7 +36,7 @@ void MobileApplication::initialize(int stage)
     const auto entry = csv_logger::compose(address, getCurrentTruePosition());
     logger.append(handle, entry);
 
-    std::string handleName {"mobile_"};
+    std::string handleName{"mobile_"};
     handleName += address.str();
     beaconsLog = logger.obtainHandle(handleName);
   }
