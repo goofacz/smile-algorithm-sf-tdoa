@@ -20,12 +20,23 @@ from smile.helpers import mac_address_to_string
 
 
 def load_nodes(directory_path):
+    """
+    Loads anchors and mobile nodes for given simulation.
+    :param directory_path: Path to directory holding simulation's CSV files with describing anchors and mobile nodes
+    :return: Tuple of two smile.nodes.Nodes instances holding anchors and mobile nodes respectively.
+    """
     anchors_file_path = path.join(directory_path, 'sf_tdoa_anchors.csv')
     mobiles_file_path = path.join(directory_path, 'sf_tdoa_mobiles.csv')
     return Nodes(anchors_file_path), Nodes(mobiles_file_path)
 
 
 def load_beacons(directory_path, mac_address):
+    """
+    Loads beacons for given mobile node identified by MAC address.
+    :param directory_path: Path to directory holding simulation CSV files
+    :param mac_address: mobile node MAC address (int)
+    :return: instance of smile.frames.Frame
+    """
     mac_address = mac_address_to_string(mac_address)
     file_path = path.join(directory_path, 'sf_tdoa_mobile_{0}.csv'.format(mac_address))
     return Frames(file_path)

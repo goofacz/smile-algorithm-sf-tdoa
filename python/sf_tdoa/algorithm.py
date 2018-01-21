@@ -24,6 +24,10 @@ from smile.helpers import PositionDimensions
 # S. Van Doan and J. Vesely, "The effectivity comparison of TDOA analytical solution methods,"
 # 2015 16th International Radar Symposium (IRS), Dresden, 2015, pp. 800-805.
 def _tdoa_analytical(coordinates, distances):
+    """
+    S. Van Doan and J. Vesely, "The effectivity comparison of TDOA analytical solution methods,"
+    2015 16th International Radar Symposium (IRS), Dresden, 2015, pp. 800-805.
+    """
     L = distances[1]
     R = distances[2]
     Xl = coordinates[1, 0] - coordinates[0, 0]
@@ -51,6 +55,14 @@ def _tdoa_analytical(coordinates, distances):
 
 
 def localize_mobile(anchors, beacons, tx_delay):
+    """
+    Process SF-TDoA simulation data for given mobile node.
+    :param anchors: Simulation anchors (smile.nodes.Nodes)
+    :param beacons: Beacons transmitted/received by given mobile node (smile.frames.Frames)
+    :param tx_delay: Processing time on anchors (int, expressed in ms)
+    :return: Array, where each row holds: approximated position (X, Y, Z), true position at the beginning of
+             localization round (X, Y, Z) and true position at the end of localization round (X, Y, Z)
+    """
     tx_delay = tx_delay * 1e+9  # ms -> ps
 
     # Filter out all sequence numbers for which mobile node received less than three beacons
