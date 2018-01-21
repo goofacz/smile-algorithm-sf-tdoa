@@ -16,15 +16,17 @@
 import argparse
 import sf_tdoa.simulation as simulation
 import sf_tdoa.algorithm as algorithm
-from smile.nodes import Nodes
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process SF-TDoA ranging data.')
     parser.add_argument('logs_directory_path', type=str, nargs=1, help='Path to directory holding CSV logs')
+    parser.add_argument('anchor_processing_time', type=int, nargs=1, help='Processing delay on anchors [ms]')
     arguments = parser.parse_args()
     logs_directory_path = arguments.logs_directory_path[0]
+    anchor_processing_time = arguments.anchor_processing_time[0]
 
     anchors, mobiles = simulation.load_nodes(logs_directory_path)
     for mobile_address in mobiles.mac_addresses:
         beacons = simulation.load_beacons(logs_directory_path, mobile_address)
-        positions = algorithm.localize_mobile(anchors, beacons, tx_delay=35000000000)
+        positions = algorithm.localize_mobile(anchors, beacons, tx_delay=anchor_processing_time)
+        pass
