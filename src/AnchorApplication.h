@@ -38,11 +38,14 @@ class AnchorApplication : public smile::IdealApplication
 
   void handleIncommingMessage(cMessage* newMessage) override;
 
+  void handleRxCompletionSignal(const IdealRxCompletion& completion) override;
+
   void sendBeacon(const SimTime& delay);
 
   SimTime beaconReplyDelay;
   inet::MACAddress predecessorAddress;
   unsigned int sequenceNumber{1};
+  SimTime desiredTxClockTime;
 };
 
 }  // namespace sf_tdoa

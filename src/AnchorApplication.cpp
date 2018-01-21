@@ -54,11 +54,24 @@ void AnchorApplication::handleIncommingMessage(cMessage* newMessage)
 {
   const auto frame = dynamic_unique_ptr_cast<BeaconFrame>(std::unique_ptr<cMessage>{newMessage});
   const auto& sourceAddress = frame->getSrc();
+  const auto& destinationAddress = frame->getDest();
 
-  // Reply on frame (i.a. broadcast beacon) only if it was sent by predecessor
-  if (sourceAddress == predecessorAddress) {
-    sendBeacon(beaconReplyDelay);
+  // Reply only on broadcast frames sent by our predecessor
+  if (!(sourceAddress == predecessorAddress && destinationAddress == inet::MACAddress::BROADCAST_ADDRESS)) {
+    return;
   }
+
+  if (desiredTxClockTime < clockTime()) {
+    throw cRuntimeError{"cannot schedule frame transmission in past"};
+  }
+
+  const auto delay = desiredTxClockTime - clockTime();
+  sendBeacon(delay);
+}
+
+void AnchorApplication::handleRxCompletionSignal(const IdealRxCompletion& completion)
+{
+  desiredTxClockTime = completion.getOperationBeginClockTimestamp() + beaconReplyDelay;
 }
 
 void AnchorApplication::sendBeacon(const SimTime& delay)
