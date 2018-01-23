@@ -27,7 +27,7 @@ def load_nodes(directory_path):
     """
     anchors_file_path = path.join(directory_path, 'sf_tdoa_anchors.csv')
     mobiles_file_path = path.join(directory_path, 'sf_tdoa_mobiles.csv')
-    return Nodes(anchors_file_path), Nodes(mobiles_file_path)
+    return Nodes.load_csv(anchors_file_path), Nodes.load_csv(mobiles_file_path)
 
 
 def load_beacons(directory_path, mac_address):
@@ -39,4 +39,4 @@ def load_beacons(directory_path, mac_address):
     """
     mac_address = mac_address_to_string(mac_address)
     file_path = path.join(directory_path, 'sf_tdoa_mobile_{0}.csv'.format(mac_address))
-    return Frames(file_path)
+    return Frames.load_csv(file_path)

@@ -16,6 +16,7 @@
 import argparse
 import sf_tdoa.simulation as simulation
 import sf_tdoa.algorithm as algorithm
+from smile.nodes import Nodes
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process SF-TDoA ranging data.')
@@ -26,7 +27,6 @@ if __name__ == '__main__':
     anchor_processing_time = arguments.anchor_processing_time[0]
 
     anchors, mobiles = simulation.load_nodes(logs_directory_path)
-    for mobile_address in mobiles.mac_addresses:
+    for mobile_address in mobiles[Nodes.MAC_ADDRESS]:
         beacons = simulation.load_beacons(logs_directory_path, mobile_address)
         positions = algorithm.localize_mobile(anchors, beacons, tx_delay=anchor_processing_time)
-        pass

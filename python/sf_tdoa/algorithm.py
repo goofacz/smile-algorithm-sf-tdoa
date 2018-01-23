@@ -13,11 +13,13 @@
 # along with this program.  If not, see http:#www.gnu.org/licenses/.
 #
 
-import numpy
-import scipy.constants
+import numpy as np
+import scipy.constants as scc
 from scipy.spatial.distance import pdist
+
+from smile.frames import Frames
+from smile.nodes import Nodes
 from smile.results import Results
-from smile.helpers import PositionDimensions
 
 
 # Algorithm based on:
@@ -35,23 +37,23 @@ def _tdoa_analytical(coordinates, distances):
     Xr = coordinates[2, 0] - coordinates[0, 0]
     Yr = coordinates[2, 1] - coordinates[0, 1]
 
-    A = -2 * numpy.asanyarray(((Xl, Yl),
-                               (Xr, Yr)))
+    A = -2 * np.asanyarray(((Xl, Yl),
+                            (Xr, Yr)))
 
-    B = numpy.asanyarray(((-2 * L, L ** 2 - Xl ** 2 - Yl ** 2),
-                          (2 * R, R ** 2 - Xr ** 2 - Yr ** 2)))
+    B = np.asanyarray(((-2 * L, L ** 2 - Xl ** 2 - Yl ** 2),
+                       (2 * R, R ** 2 - Xr ** 2 - Yr ** 2)))
 
-    tmp, _, _, _ = numpy.linalg.lstsq(A, B)
+    tmp, _, _, _ = np.linalg.lstsq(A, B)
     a = tmp[0, 0] ** 2 + tmp[1, 0] ** 2 - 1
     b = 2 * (tmp[0, 0] * tmp[0, 1] + tmp[1, 0] * tmp[1, 1])
     c = tmp[0, 1] ** 2 + tmp[1, 1] ** 2
 
-    K = numpy.max(numpy.real(numpy.roots((a, b, c))))
+    K = np.max(np.real(np.roots((a, b, c))))
 
     X = tmp[0, 0] * K + tmp[0, 1] + coordinates[0, 0]
     Y = tmp[1, 0] * K + tmp[1, 1] + coordinates[0, 1]
 
-    return numpy.asarray((X, Y))
+    return np.asarray((X, Y))
 
 
 def localize_mobile(anchors, beacons, tx_delay):
@@ -66,43 +68,45 @@ def localize_mobile(anchors, beacons, tx_delay):
     tx_delay = tx_delay * 1e+9  # ms -> ps
 
     # Filter out all sequence numbers for which mobile node received less than three beacons
-    sequence_numbers, sequence_number_counts = numpy.unique(beacons.sequence_numbers, return_counts=True)
+    sequence_numbers, sequence_number_counts = np.unique(beacons[:, Frames.SEQUENCE_NUMBER], return_counts=True)
     sequence_numbers = sequence_numbers[sequence_number_counts > 3]
 
-    result = Results(PositionDimensions.TWO_D, sequence_numbers.size)
+    result = Results.create_array(sequence_numbers.size, position_dimensions=2)
 
     for i in range(sequence_numbers.size):
         sequence_number = sequence_numbers[i]
 
         # Extract beacons with specific sequence number
-        current_beacons = beacons[numpy.where(beacons.sequence_numbers == sequence_number)]
+        current_beacons = beacons[np.where(beacons[:, Frames.SEQUENCE_NUMBER] == sequence_number)]
 
         # Compute distances between anchor pairs (first, second) and (second, third)
-        anchor_distances = numpy.zeros(2)
-        anchor_distances[0] = pdist(anchors.positions[0:2, 0:2], 'euclidean')[0]
-        anchor_distances[1] = pdist(anchors.positions[1:3, 0:2], 'euclidean')[0]
+        anchor_distances = np.zeros(2)
+        anchor_distances[0] = pdist(anchors[0:2, Nodes.POSITION_2D], 'euclidean')[0]
+        anchor_distances[1] = pdist(anchors[1:3, Nodes.POSITION_2D], 'euclidean')[0]
 
-        assert (scipy.constants.unit('speed of light in vacuum') == 'm s^-1')
-        c = scipy.constants.value('speed of light in vacuum')
+        assert (scc.unit('speed of light in vacuum') == 'm s^-1')
+        c = scc.value('speed of light in vacuum')
         c = c * 1e-12  # m/s -> m/ps
 
         # Compute ToF between anchor pairs
         anchor_tx_delays = anchor_distances / c + tx_delay
 
         # Follow algorithm steps
-        anchor_coordinates = numpy.zeros((3, 2))
-        anchor_coordinates[0] = anchors.positions[1, (0, 1)]
-        anchor_coordinates[1] = anchors.positions[0, (0, 1)]
-        anchor_coordinates[2] = anchors.positions[2, (0, 1)]
+        anchor_coordinates = np.zeros((3, 2))
+        anchor_coordinates[0] = anchors[1, Nodes.POSITION_2D]
+        anchor_coordinates[1] = anchors[0, Nodes.POSITION_2D]
+        anchor_coordinates[2] = anchors[2, Nodes.POSITION_2D]
 
-        timestamps = numpy.full(3, float('nan'))
-        timestamps[1] = current_beacons.begin_timestamps[1, 0] - current_beacons.begin_timestamps[0, 0] - anchor_tx_delays[0]
-        timestamps[2] = current_beacons.begin_timestamps[2, 0] - current_beacons.begin_timestamps[1, 0] - anchor_tx_delays[1]
+        timestamps = np.full(3, float('nan'))
+        timestamps[1] = current_beacons[1, Frames.BEGIN_CLOCK_TIMESTAMP] - current_beacons[
+            0, Frames.BEGIN_CLOCK_TIMESTAMP] - anchor_tx_delays[0]
+        timestamps[2] = current_beacons[2, Frames.BEGIN_CLOCK_TIMESTAMP] - current_beacons[
+            1, Frames.BEGIN_CLOCK_TIMESTAMP] - anchor_tx_delays[1]
 
         distances = timestamps * c
 
-        result.position[i] = (*_tdoa_analytical(anchor_coordinates, distances), 0)
-        result.begin_true_position[i] = current_beacons.begin_positions[0]
-        result.end_true_position[i] = current_beacons.end_positions[2]
+        result[i, Results.POSITION_2D] = _tdoa_analytical(anchor_coordinates, distances)
+        result[i, Results.BEGIN_TRUE_POSITION_3D] = current_beacons[0, Frames.BEGIN_TRUE_POSITION_3D]
+        result[i, Results.END_TRUE_POSITION_3D] = current_beacons[2, Frames.END_TRUE_POSITION_3D]
 
     return result
