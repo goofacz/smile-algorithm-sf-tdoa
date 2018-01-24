@@ -43,7 +43,7 @@ def _tdoa_analytical(coordinates, distances):
     B = np.asanyarray(((-2 * L, L ** 2 - Xl ** 2 - Yl ** 2),
                        (2 * R, R ** 2 - Xr ** 2 - Yr ** 2)))
 
-    tmp, _, _, _ = np.linalg.lstsq(A, B)
+    tmp, _, _, _ = np.linalg.lstsq(A, B, rcond=None)
     a = tmp[0, 0] ** 2 + tmp[1, 0] ** 2 - 1
     b = 2 * (tmp[0, 0] * tmp[0, 1] + tmp[1, 0] * tmp[1, 1])
     c = tmp[0, 1] ** 2 + tmp[1, 1] ** 2

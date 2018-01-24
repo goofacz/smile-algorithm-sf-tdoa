@@ -27,6 +27,6 @@ if __name__ == '__main__':
     anchor_processing_time = arguments.anchor_processing_time[0]
 
     anchors, mobiles = simulation.load_nodes(logs_directory_path)
-    for mobile_address in mobiles[Nodes.MAC_ADDRESS]:
+    for mobile_address in mobiles[:, Nodes.MAC_ADDRESS]:
         beacons = simulation.load_beacons(logs_directory_path, mobile_address)
         positions = algorithm.localize_mobile(anchors, beacons, tx_delay=anchor_processing_time)
