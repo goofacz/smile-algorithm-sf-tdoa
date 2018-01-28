@@ -14,9 +14,12 @@
 #
 
 import argparse
+import numpy as np
 import sf_tdoa.simulation as simulation
 import sf_tdoa.algorithm as algorithm
+import smile.analysis as se
 from smile.nodes import Nodes
+from smile.results import Results
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process SF-TDoA ranging data.')
@@ -27,6 +30,16 @@ if __name__ == '__main__':
     anchor_processing_time = arguments.anchor_processing_time[0]
 
     anchors, mobiles = simulation.load_nodes(logs_directory_path)
+    simulation_results = None
     for mobile_address in mobiles[:, Nodes.MAC_ADDRESS]:
         beacons = simulation.load_beacons(logs_directory_path, mobile_address)
-        positions = algorithm.localize_mobile(anchors, beacons, tx_delay=anchor_processing_time)
+        mobile_results = algorithm.localize_mobile(anchors, beacons, tx_delay=anchor_processing_time)
+        mobile_results[:, Results.MAC_ADDRESS] = mobile_address
+
+        if simulation_results is None:
+            simulation_results = mobile_results
+        else:
+            simulation_results = np.append(simulation_results, mobile_results, axis=0)
+
+    se.absolute_position_error_surface(simulation_results)
+    se.absolute_position_error_histogram(simulation_results)

@@ -67,6 +67,10 @@ def localize_mobile(anchors, beacons, tx_delay):
     """
     tx_delay = tx_delay * 1e+9  # ms -> ps
 
+    assert (scc.unit('speed of light in vacuum') == 'm s^-1')
+    c = scc.value('speed of light in vacuum')
+    c = c * 1e-12  # m/s -> m/ps
+
     # Filter out all sequence numbers for which mobile node received less than three beacons
     sequence_numbers, sequence_number_counts = np.unique(beacons[:, Frames.SEQUENCE_NUMBER], return_counts=True)
     sequence_numbers = sequence_numbers[sequence_number_counts > 3]
@@ -83,10 +87,6 @@ def localize_mobile(anchors, beacons, tx_delay):
         anchor_distances = np.zeros(2)
         anchor_distances[0] = pdist(anchors[0:2, Nodes.POSITION_2D], 'euclidean')[0]
         anchor_distances[1] = pdist(anchors[1:3, Nodes.POSITION_2D], 'euclidean')[0]
-
-        assert (scc.unit('speed of light in vacuum') == 'm s^-1')
-        c = scc.value('speed of light in vacuum')
-        c = c * 1e-12  # m/s -> m/ps
 
         # Compute ToF between anchor pairs
         anchor_tx_delays = anchor_distances / c + tx_delay
