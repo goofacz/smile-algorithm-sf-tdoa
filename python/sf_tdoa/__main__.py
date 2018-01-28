@@ -17,7 +17,7 @@ import argparse
 import numpy as np
 import sf_tdoa.simulation as simulation
 import sf_tdoa.algorithm as algorithm
-import smile.analysis as se
+import smile.analysis as sa
 from smile.nodes import Nodes
 from smile.results import Results
 
@@ -41,5 +41,6 @@ if __name__ == '__main__':
         else:
             simulation_results = np.append(simulation_results, mobile_results, axis=0)
 
-    se.absolute_position_error_surface(simulation_results)
-    se.absolute_position_error_histogram(simulation_results)
+    unique_results = sa.obtain_unique_results(simulation_results)
+    sa.absolute_position_error_surface(unique_results)
+    sa.absolute_position_error_histogram(unique_results)
