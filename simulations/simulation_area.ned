@@ -26,27 +26,27 @@ import inet.physicallayer.idealradio.IdealRadioMedium;
 import inet.visualizer.integrated.IntegratedCanvasVisualizer;
 import inet.networklayer.configurator.generic.GenericNetworkConfigurator;
 
-network single_stationary_mobile_node
+network simulation_area
 {
     parameters:
-        @display("bgb=413,294");
+        @display("bgb=334,211");
         int mobilesNumber = default(0);
 
     submodules:
         radioMedium: IdealRadioMedium {
-            @display("p=226,40");
+            @display("p=181,168");
         }
 
         visualizer: IntegratedCanvasVisualizer {
-            @display("p=303,38");
+            @display("p=258,166");
         }
 
         configurator: GenericNetworkConfigurator {
-            @display("p=69,38");
+            @display("p=24,166");
         }
 
         logger: Logger {
-            @display("p=147,30");
+            @display("p=102,158");
             fileNamePrefix = "sf_tdoa";
             overwrite = true;
         }
@@ -60,7 +60,7 @@ network single_stationary_mobile_node
         }
 
         anchorNode1: RadioNode {
-            @display("p=100,100");
+            @display("p=0,0");
             mobilityType = "LinearMobility";
             applicationType = "AnchorApplication";
             nicDriverType = "IdealRangingNicDriver";
@@ -69,7 +69,7 @@ network single_stationary_mobile_node
         }
 
         anchorNode2: RadioNode {
-            @display("p=175,100");
+            @display("p=75,0");
             mobilityType = "LinearMobility";
             applicationType = "AnchorApplication";
             nicDriverType = "IdealRangingNicDriver";
@@ -78,7 +78,7 @@ network single_stationary_mobile_node
         }
 
         anchorNode3: RadioNode {
-            @display("p=175,175");
+            @display("p=75,75");
             mobilityType = "LinearMobility";
             applicationType = "AnchorApplication";
             nicDriverType = "IdealRangingNicDriver";
@@ -87,7 +87,7 @@ network single_stationary_mobile_node
         }
 
         anchorNode4: RadioNode {
-            @display("p=100,175");
+            @display("p=0,75");
             mobilityType = "LinearMobility";
             applicationType = "AnchorApplication";
             nicDriverType = "IdealRangingNicDriver";
