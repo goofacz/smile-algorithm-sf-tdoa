@@ -10,7 +10,7 @@ cleanall: checkmakefiles
 	@rm -f src/Makefile
 
 makefiles:
-	@cd src && opp_makemake --make-so -f --deep -o smile-algorithm-sf-tdoa -O out -KINET_PROJ=../../inet -DINET_IMPORT -I. -I$$\(INET_PROJ\)/src -L$$\(INET_PROJ\)/out/$$\(CONFIGNAME\)/src -lINET -KSMILE_PROJ=../../smile -I$$\(SMILE_PROJ\)/src -L$$\(SMILE_PROJ\)/out/$$\(CONFIGNAME\)/src -lsmile --lstdc++fs
+	@cd src && opp_makemake --make-so -f --deep -o smile-algorithm-sf-tdoa -O out -KINET_PROJ=../../inet -DINET_IMPORT -I. -I$$\(INET_PROJ\)/src -L$$\(INET_PROJ\)/out/$$\(CONFIGNAME\)/src -lINET -KSMILE_PROJ=../../smile -I$$\(SMILE_PROJ\)/src -L$$\(SMILE_PROJ\)/out/$$\(CONFIGNAME\)/src -lsmile -lstdc++fs
 
 checkmakefiles:
 	@if [ ! -f src/Makefile ]; then \
