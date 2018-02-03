@@ -15,7 +15,6 @@
 
 import numpy as np
 import scipy.constants as scc
-from scipy.spatial.distance import pdist
 
 from smile.frames import Frames
 from smile.nodes import Nodes
