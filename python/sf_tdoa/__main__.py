@@ -19,6 +19,7 @@ import sf_tdoa.simulation as simulation
 import sf_tdoa.algorithm as algorithm
 import smile.analysis as sa
 from smile.nodes import Nodes
+from smile.frames import Frames
 from smile.results import Results
 
 if __name__ == '__main__':
@@ -30,9 +31,10 @@ if __name__ == '__main__':
     anchor_processing_time = arguments.anchor_processing_time[0]
 
     anchors, mobiles = simulation.load_nodes(logs_directory_path)
+    mobiles_beacons = simulation.load_mobiles_beacons(logs_directory_path)
     simulation_results = None
     for mobile_address in mobiles[:, Nodes.MAC_ADDRESS]:
-        beacons = simulation.load_beacons(logs_directory_path, mobile_address)
+        beacons = mobiles_beacons[mobiles_beacons[:, Frames.NODE_MAC_ADDRESS] == mobile_address]
         mobile_results = algorithm.localize_mobile(anchors, beacons, tx_delay=anchor_processing_time)
         mobile_results[:, Results.MAC_ADDRESS] = mobile_address
 

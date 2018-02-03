@@ -33,15 +33,12 @@ void AnchorApplication::initialize(int stage)
     predecessorAddress = inet::MACAddress{par("predecessorAddress").stringValue()};
   }
 
-  if (stage == inet::INITSTAGE_PHYSICAL_ENVIRONMENT_2) {
+  if (stage == inet::INITSTAGE_APPLICATION_LAYER) {
     auto& logger = getLogger();
     const auto handle = logger.obtainHandle("anchors");
-    const auto& nicDriver = getNicDriver();
-    const auto entry = csv_logger::compose(nicDriver.getMacAddress(), getCurrentTruePosition());
+    const auto entry = csv_logger::compose(getMacAddress(), getCurrentTruePosition());
     logger.append(handle, entry);
-  }
 
-  if (stage == inet::INITSTAGE_APPLICATION_LAYER) {
     // Designated (initiator) anchor sends the very first frame
     const auto initialAnchor = par("initialAnchor").boolValue();
     if (initialAnchor) {

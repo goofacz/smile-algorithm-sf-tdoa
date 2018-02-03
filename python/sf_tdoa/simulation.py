@@ -30,13 +30,11 @@ def load_nodes(directory_path):
     return Nodes.load_csv(anchors_file_path), Nodes.load_csv(mobiles_file_path)
 
 
-def load_beacons(directory_path, mac_address):
+def load_mobiles_beacons(directory_path):
     """
-    Loads beacons for given mobile node identified by MAC address.
+    Loads beacons received/transmitted by all mobile nodes.
     :param directory_path: Path to directory holding simulation CSV files
-    :param mac_address: mobile node MAC address (int)
     :return: instance of smile.frames.Frame
     """
-    mac_address = mac_address_to_string(mac_address)
-    file_path = path.join(directory_path, 'sf_tdoa_mobile_{0}.csv'.format(mac_address))
+    file_path = path.join(directory_path, 'sf_tdoa_mobiles_beacons.csv')
     return Frames.load_csv(file_path)
