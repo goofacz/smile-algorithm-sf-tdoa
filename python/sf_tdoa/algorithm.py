@@ -80,9 +80,7 @@ def localize_mobile(anchors, beacons, tx_delay):
         sequence_number = sequence_numbers[i]
 
         # Extract beacons with specific sequence number
-        y = beacons["sequence_number"] == sequence_number
-        x = np.where(y)
-        current_beacons = beacons[x, :]
+        current_beacons = beacons[np.where(beacons["sequence_number"] == sequence_number)]
         positions = []
 
         # Evaluate different anchors sets
