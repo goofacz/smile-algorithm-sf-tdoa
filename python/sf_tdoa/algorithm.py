@@ -70,7 +70,7 @@ def localize_mobile(anchors, beacons, tx_delay):
     c = c * 1e-12  # m/s -> m/ps
 
     # Filter out all sequence numbers for which mobile node received less than three beacons
-    sequence_numbers, sequence_number_counts = np.unique(beacons[:, Frames.SEQUENCE_NUMBER], return_counts=True)
+    sequence_numbers, sequence_number_counts = np.unique(beacons["sequence_number"], return_counts=True)
     sequence_numbers = sequence_numbers[sequence_number_counts > 3]
 
     result = Results.create_array(sequence_numbers.size, position_dimensions=2)
@@ -80,44 +80,46 @@ def localize_mobile(anchors, beacons, tx_delay):
         sequence_number = sequence_numbers[i]
 
         # Extract beacons with specific sequence number
-        current_beacons = beacons[np.where(beacons[:, Frames.SEQUENCE_NUMBER] == sequence_number)]
+        y = beacons["sequence_number"] == sequence_number
+        x = np.where(y)
+        current_beacons = beacons[x, :]
         positions = []
 
         # Evaluate different anchors sets
         for anchor_triple in anchor_triples:
             # Compute distances between anchor pairs (first, second) and (second, third)
             anchor_distances = np.zeros(2)
-            anchor_distances[0] = np.abs(np.linalg.norm(anchors[anchor_triple[1], Nodes.POSITION_2D] -
-                                                        anchors[anchor_triple[0], Nodes.POSITION_2D]))
-            anchor_distances[1] = np.abs(np.linalg.norm(anchors[anchor_triple[2], Nodes.POSITION_2D] -
-                                                        anchors[anchor_triple[1], Nodes.POSITION_2D]))
+            anchor_distances[0] = np.abs(np.linalg.norm(anchors[anchor_triple[1], "position_2d"] -
+                                                        anchors[anchor_triple[0], "position_2d"]))
+            anchor_distances[1] = np.abs(np.linalg.norm(anchors[anchor_triple[2], "position_2d"] -
+                                                        anchors[anchor_triple[1], "position_2d"]))
 
             # Compute ToF between anchor pairs
             anchor_tx_delays = anchor_distances / c + tx_delay
 
             # Follow algorithm steps
             anchor_coordinates = np.zeros((3, 2))
-            anchor_coordinates[0] = anchors[anchor_triple[1], Nodes.POSITION_2D]
-            anchor_coordinates[1] = anchors[anchor_triple[0], Nodes.POSITION_2D]
-            anchor_coordinates[2] = anchors[anchor_triple[2], Nodes.POSITION_2D]
+            anchor_coordinates[0] = anchors[anchor_triple[1], "position_2d"]
+            anchor_coordinates[1] = anchors[anchor_triple[0], "position_2d"]
+            anchor_coordinates[2] = anchors[anchor_triple[2], "position_2d"]
 
             timestamps = np.full(3, float('nan'))
-            timestamps[1] = current_beacons[anchor_triple[1], Frames.BEGIN_CLOCK_TIMESTAMP] - \
-                            current_beacons[anchor_triple[0], Frames.BEGIN_CLOCK_TIMESTAMP] - anchor_tx_delays[0]
-            timestamps[2] = current_beacons[anchor_triple[2], Frames.BEGIN_CLOCK_TIMESTAMP] - \
-                            current_beacons[anchor_triple[1], Frames.BEGIN_CLOCK_TIMESTAMP] - anchor_tx_delays[1]
+            timestamps[1] = current_beacons[anchor_triple[1], "begin_clock_timestamp"] - \
+                            current_beacons[anchor_triple[0], "begin_clock_timestamp"] - anchor_tx_delays[0]
+            timestamps[2] = current_beacons[anchor_triple[2], "begin_clock_timestamp"] - \
+                            current_beacons[anchor_triple[1], "begin_clock_timestamp"] - anchor_tx_delays[1]
 
             distances = timestamps * c
 
             positions.append(_tdoa_analytical(anchor_coordinates, distances))
-            result[i, Results.BEGIN_TRUE_POSITION_3D] = current_beacons[0, Frames.BEGIN_TRUE_POSITION_3D]
-            result[i, Results.END_TRUE_POSITION_3D] = current_beacons[2, Frames.END_TRUE_POSITION_3D]
+            result[i, "begin_true_position_3d"] = current_beacons[0, "begin_true_position_3d"]
+            result[i, "end_true_position_3d"] = current_beacons[2, "end_true_position_3d"]
 
         # Choose better position
         # TODO Propose better solution, for now just choose position being closer to (0, 0)
         if np.abs(np.linalg.norm((0, 0) - positions[0])) < np.abs(np.linalg.norm((0, 0) - positions[1])):
-            result[i, Results.POSITION_2D] = positions[0]
+            result[i,"position_2d"] = positions[0]
         else:
-            result[i, Results.POSITION_2D] = positions[1]
+            result[i, "position_2d"] = positions[1]
 
     return result

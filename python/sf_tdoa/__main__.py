@@ -33,10 +33,10 @@ if __name__ == '__main__':
     anchors, mobiles = simulation.load_nodes(logs_directory_path)
     mobiles_beacons = simulation.load_mobiles_beacons(logs_directory_path)
     simulation_results = None
-    for mobile_address in mobiles[:, Nodes.MAC_ADDRESS]:
-        beacons = mobiles_beacons[mobiles_beacons[:, Frames.NODE_MAC_ADDRESS] == mobile_address]
+    for mobile_address in mobiles["mac_address"]:
+        beacons = mobiles_beacons[mobiles_beacons["node_mac_address"] == mobile_address]
         mobile_results = algorithm.localize_mobile(anchors, beacons, tx_delay=anchor_processing_time)
-        mobile_results[:, Results.MAC_ADDRESS] = mobile_address
+        mobile_results["mac_address"] = mobile_address
 
         if simulation_results is None:
             simulation_results = mobile_results
