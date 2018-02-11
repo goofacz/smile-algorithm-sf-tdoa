@@ -48,7 +48,7 @@ void MobileApplication::handleRxCompletionSignal(const smile::IdealRxCompletion&
 {
   const auto frame = omnetpp::check_and_cast<const BeaconFrame*>(completion.getFrame());
   const auto entry =
-      csv_logger::compose(getMacAddress(), completion, frame->getSrc(), frame->getDest(), frame->getSequenceNumber());
+      csv_logger::compose(getMacAddress(), completion, frame->getSequenceNumber());
   auto& logger = getLogger();
   logger.append(beaconsLog, entry);
 }

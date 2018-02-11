@@ -41,7 +41,7 @@ if __name__ == '__main__':
         if simulation_results is None:
             simulation_results = mobile_results
         else:
-            simulation_results = np.append(simulation_results, mobile_results, axis=0)
+            simulation_results = Results(np.append(simulation_results, mobile_results, axis=0))
 
     unique_results = sa.obtain_unique_results(simulation_results)
     sa.absolute_position_error_surface(unique_results)
