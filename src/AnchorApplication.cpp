@@ -36,7 +36,7 @@ void AnchorApplication::initialize(int stage)
   if (stage == inet::INITSTAGE_APPLICATION_LAYER) {
     auto& logger = getLogger();
     const auto handle = logger.obtainHandle("anchors");
-    const auto entry = csv_logger::compose(getMacAddress(), getCurrentTruePosition());
+    const auto entry = csv_logger::compose(getMacAddress(), getCurrentTruePosition(), beaconReplyDelay);
     logger.append(handle, entry);
 
     // Designated (initiator) anchor sends the very first frame
