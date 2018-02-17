@@ -55,16 +55,12 @@ def _tdoa_analytical(coordinates, distances):
     return np.asarray((X, Y))
 
 
-def localize_mobile(anchors, beacons, tx_delay):
-    """
-    Process SF-TDoA simulation data for given mobile node.
-    :param anchors: Simulation anchors (smile.nodes.Nodes)
-    :param beacons: Beacons transmitted/received by given mobile node (smile.frames.Frames)
-    :param tx_delay: Processing time on anchors (int, expressed in ms)
-    :return: Array, where each row holds: approximated position (X, Y, Z), true position at the beginning of
-             localization round (X, Y, Z) and true position at the end of localization round (X, Y, Z)
-    """
-    tx_delay = tx_delay * 1e+9  # ms -> ps
+def localize_mobile(anchors, beacons):
+    # Assume that all anchors has the same reply delay
+    reply_delay = np.unique(anchors["beacon_reply_delay"])
+    assert(reply_delay.shape == (1,))
+    reply_delay = reply_delay[0]
+
     assert (scc.unit('speed of light in vacuum') == 'm s^-1')
     c = scc.value('speed of light in vacuum')
     c = c * 1e-12  # m/s -> m/ps
@@ -93,7 +89,7 @@ def localize_mobile(anchors, beacons, tx_delay):
                                                         anchors[anchor_triple[1], "position_2d"]))
 
             # Compute ToF between anchor pairs
-            anchor_tx_delays = anchor_distances / c + tx_delay
+            anchor_tx_delays = anchor_distances / c + reply_delay
 
             # Follow algorithm steps
             anchor_coordinates = np.zeros((3, 2))

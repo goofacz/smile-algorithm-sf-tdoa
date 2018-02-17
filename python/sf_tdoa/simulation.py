@@ -13,28 +13,30 @@
 # along with this program.  If not, see http:#www.gnu.org/licenses/.
 #
 
-from os import path
-from smile.nodes import Nodes
+import smile.simulation
+import os.path
+import numpy as np
+
+from sf_tdoa.algorithm import localize_mobile
+from sf_tdoa.anchors import Anchors
+
 from smile.frames import Frames
-from smile.helpers import mac_address_to_string
+from smile.nodes import Nodes
+from smile.results import Results
 
 
-def load_nodes(directory_path):
-    """
-    Loads anchors and mobile nodes for given simulation.
-    :param directory_path: Path to directory holding simulation's CSV files with describing anchors and mobile nodes
-    :return: Tuple of two smile.nodes.Nodes instances holding anchors and mobile nodes respectively.
-    """
-    anchors_file_path = path.join(directory_path, 'sf_tdoa_anchors.csv')
-    mobiles_file_path = path.join(directory_path, 'sf_tdoa_mobiles.csv')
-    return Nodes.load_csv(anchors_file_path), Nodes.load_csv(mobiles_file_path)
+class Simulation(smile.simulation.Simulation):
+    def run_offline(self, directory_path):
+        anchors = Anchors.load_csv(os.path.join(directory_path, 'sf_tdoa_anchors.csv'))
+        mobiles = Nodes.load_csv(os.path.join(directory_path, 'sf_tdoa_mobiles.csv'))
+        beacons = Frames.load_csv(os.path.join(directory_path, 'sf_tdoa_mobiles_beacons.csv'))
 
+        results = None
+        for mobile_node in mobiles:
+            mobile_results = localize_mobile(anchors, beacons)
+            if results is None:
+                results = mobile_results
+            else:
+                results = Results(np.concatenate((results, mobile_results), axis=0))
 
-def load_mobiles_beacons(directory_path):
-    """
-    Loads beacons received/transmitted by all mobile nodes.
-    :param directory_path: Path to directory holding simulation CSV files
-    :return: instance of smile.frames.Frame
-    """
-    file_path = path.join(directory_path, 'sf_tdoa_mobiles_beacons.csv')
-    return Frames.load_csv(file_path)
+        return results
