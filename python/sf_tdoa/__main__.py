@@ -14,8 +14,9 @@
 #
 
 import argparse
-from sf_tdoa.simulation import Simulation
+
 import smile.analysis as sa
+from sf_tdoa.simulation import Simulation
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process SF-TDoA ranging data.')

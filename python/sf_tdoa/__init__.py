@@ -13,5 +13,3 @@
 # along with this program.  If not, see http:#www.gnu.org/licenses/.
 #
 
-import sf_tdoa.algorithm as algorithm
-import sf_tdoa.simulation as simulation

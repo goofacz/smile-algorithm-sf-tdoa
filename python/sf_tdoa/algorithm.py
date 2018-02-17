@@ -16,49 +16,14 @@
 import numpy as np
 import scipy.constants as scc
 
-from smile.frames import Frames
-from smile.nodes import Nodes
+import smile.algorithms.tdoa as tdoa
 from smile.results import Results
-
-
-# Algorithm based on:
-# S. Van Doan and J. Vesely, "The effectivity comparison of TDOA analytical solution methods,"
-# 2015 16th International Radar Symposium (IRS), Dresden, 2015, pp. 800-805.
-def _tdoa_analytical(coordinates, distances):
-    """
-    S. Van Doan and J. Vesely, "The effectivity comparison of TDOA analytical solution methods,"
-    2015 16th International Radar Symposium (IRS), Dresden, 2015, pp. 800-805.
-    """
-    L = distances[1]
-    R = distances[2]
-    Xl = coordinates[1, 0] - coordinates[0, 0]
-    Yl = coordinates[1, 1] - coordinates[0, 1]
-    Xr = coordinates[2, 0] - coordinates[0, 0]
-    Yr = coordinates[2, 1] - coordinates[0, 1]
-
-    A = -2 * np.asanyarray(((Xl, Yl),
-                            (Xr, Yr)))
-
-    B = np.asanyarray(((-2 * L, L ** 2 - Xl ** 2 - Yl ** 2),
-                       (2 * R, R ** 2 - Xr ** 2 - Yr ** 2)))
-
-    tmp, _, _, _ = np.linalg.lstsq(A, B, rcond=None)
-    a = tmp[0, 0] ** 2 + tmp[1, 0] ** 2 - 1
-    b = 2 * (tmp[0, 0] * tmp[0, 1] + tmp[1, 0] * tmp[1, 1])
-    c = tmp[0, 1] ** 2 + tmp[1, 1] ** 2
-
-    K = np.max(np.real(np.roots((a, b, c))))
-
-    X = tmp[0, 0] * K + tmp[0, 1] + coordinates[0, 0]
-    Y = tmp[1, 0] * K + tmp[1, 1] + coordinates[0, 1]
-
-    return np.asarray((X, Y))
 
 
 def localize_mobile(anchors, beacons):
     # Assume that all anchors has the same reply delay
     reply_delay = np.unique(anchors["beacon_reply_delay"])
-    assert(reply_delay.shape == (1,))
+    assert (reply_delay.shape == (1,))
     reply_delay = reply_delay[0]
 
     assert (scc.unit('speed of light in vacuum') == 'm s^-1')
@@ -105,14 +70,17 @@ def localize_mobile(anchors, beacons):
 
             distances = timestamps * c
 
-            positions.append(_tdoa_analytical(anchor_coordinates, distances))
+            # Compute position
+            position = tdoa.doan_vesely(anchor_coordinates, distances)
+
+            positions.append(position)
             result[i, "begin_true_position_3d"] = current_beacons[0, "begin_true_position_3d"]
             result[i, "end_true_position_3d"] = current_beacons[2, "end_true_position_3d"]
 
         # Choose better position
         # TODO Propose better solution, for now just choose position being closer to (0, 0)
         if np.abs(np.linalg.norm((0, 0) - positions[0])) < np.abs(np.linalg.norm((0, 0) - positions[1])):
-            result[i,"position_2d"] = positions[0]
+            result[i, "position_2d"] = positions[0]
         else:
             result[i, "position_2d"] = positions[1]
 

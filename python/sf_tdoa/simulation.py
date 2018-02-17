@@ -13,13 +13,13 @@
 # along with this program.  If not, see http:#www.gnu.org/licenses/.
 #
 
-import smile.simulation
 import os.path
+
 import numpy as np
 
+import smile.simulation
 from sf_tdoa.algorithm import localize_mobile
 from sf_tdoa.anchors import Anchors
-
 from smile.frames import Frames
 from smile.nodes import Nodes
 from smile.results import Results
