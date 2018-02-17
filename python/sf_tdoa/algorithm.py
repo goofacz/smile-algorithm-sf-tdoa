@@ -62,16 +62,14 @@ def localize_mobile(anchors, beacons):
             anchor_coordinates[1] = anchors[anchor_triple[0], "position_2d"]
             anchor_coordinates[2] = anchors[anchor_triple[2], "position_2d"]
 
-            timestamps = np.full(3, float('nan'))
-            timestamps[1] = current_beacons[anchor_triple[1], "begin_clock_timestamp"] - \
-                            current_beacons[anchor_triple[0], "begin_clock_timestamp"] - anchor_tx_delays[0]
-            timestamps[2] = current_beacons[anchor_triple[2], "begin_clock_timestamp"] - \
-                            current_beacons[anchor_triple[1], "begin_clock_timestamp"] - anchor_tx_delays[1]
-
-            distances = timestamps * c
+            timestamp_differences = np.full(3, float('nan'))
+            timestamp_differences[1] = current_beacons[anchor_triple[1], "begin_clock_timestamp"] - \
+                                       current_beacons[anchor_triple[0], "begin_clock_timestamp"] - anchor_tx_delays[0]
+            timestamp_differences[2] = current_beacons[anchor_triple[2], "begin_clock_timestamp"] - \
+                                       current_beacons[anchor_triple[1], "begin_clock_timestamp"] - anchor_tx_delays[1]
 
             # Compute position
-            position = tdoa.doan_vesely(anchor_coordinates, distances)
+            position = tdoa.doan_vesely(anchor_coordinates, timestamp_differences)
 
             positions.append(position)
             result[i, "begin_true_position_3d"] = current_beacons[0, "begin_true_position_3d"]
