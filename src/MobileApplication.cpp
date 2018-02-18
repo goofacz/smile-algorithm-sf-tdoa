@@ -15,6 +15,7 @@
 
 #include "MobileApplication.h"
 #include <CsvLogger.h>
+#include <inet/common/ModuleAccess.h>
 #include <utilities.h>
 #include "BeaconFrame_m.h"
 
@@ -29,13 +30,11 @@ void MobileApplication::initialize(int stage)
   IdealApplication::initialize(stage);
 
   if (stage == inet::INITSTAGE_APPLICATION_LAYER) {
-    auto& logger = getLogger();
-    const auto handle = logger.obtainHandle("mobiles");
+    auto* mobilesLog = inet::getModuleFromPar<smile::Logger>(par("mobilesLoggerModule"), this, true);
     const auto entry = csv_logger::compose(getMacAddress(), getCurrentTruePosition());
-    logger.append(handle, entry);
+    mobilesLog->append(entry);
 
-    std::string handleName{"mobiles_beacons"};
-    beaconsLog = logger.obtainHandle(handleName);
+    framesLog = inet::getModuleFromPar<smile::Logger>(par("mobileFramesLoggerModule"), this, true);
   }
 }
 
@@ -48,8 +47,7 @@ void MobileApplication::handleRxCompletionSignal(const smile::IdealRxCompletion&
 {
   const auto frame = omnetpp::check_and_cast<const BeaconFrame*>(completion.getFrame());
   const auto entry = csv_logger::compose(getMacAddress(), completion, frame->getSequenceNumber());
-  auto& logger = getLogger();
-  logger.append(beaconsLog, entry);
+  framesLog->append(entry);
 }
 
 }  // namespace sf_tdoa

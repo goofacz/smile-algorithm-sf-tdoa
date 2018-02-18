@@ -29,7 +29,7 @@ class Simulation(smile.simulation.Simulation):
     def run_offline(self, directory_path):
         anchors = Anchors.load_csv(os.path.join(directory_path, 'sf_tdoa_anchors.csv'))
         mobiles = Nodes.load_csv(os.path.join(directory_path, 'sf_tdoa_mobiles.csv'))
-        beacons = Frames.load_csv(os.path.join(directory_path, 'sf_tdoa_mobiles_beacons.csv'))
+        beacons = Frames.load_csv(os.path.join(directory_path, 'sf_tdoa_mobile_frames.csv'))
 
         results = None
         for mobile_node in mobiles:

@@ -16,6 +16,7 @@
 #pragma once
 
 #include <IdealApplication.h>
+#include <Logger.h>
 
 namespace smile {
 namespace algorithm {
@@ -39,7 +40,7 @@ class MobileApplication : public smile::IdealApplication
 
   void handleRxCompletionSignal(const smile::IdealRxCompletion& completion) override;
 
-  Logger::Handle beaconsLog;
+  smile::Logger* framesLog;
 };
 
 }  // namespace sf_tdoa

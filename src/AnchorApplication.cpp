@@ -15,6 +15,8 @@
 
 #include "AnchorApplication.h"
 #include <CsvLogger.h>
+#include <Logger.h>
+#include <inet/common/ModuleAccess.h>
 #include <utilities.h>
 #include "BeaconFrame_m.h"
 
@@ -34,10 +36,9 @@ void AnchorApplication::initialize(int stage)
   }
 
   if (stage == inet::INITSTAGE_APPLICATION_LAYER) {
-    auto& logger = getLogger();
-    const auto handle = logger.obtainHandle("anchors");
+    auto* anchorsLog = inet::getModuleFromPar<smile::Logger>(par("anchorsLoggerModule"), this, true);
     const auto entry = csv_logger::compose(getMacAddress(), getCurrentTruePosition(), beaconReplyDelay);
-    logger.append(handle, entry);
+    anchorsLog->append(entry);
 
     // Designated (initiator) anchor sends the very first frame
     const auto initialAnchor = par("initialAnchor").boolValue();

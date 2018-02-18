@@ -20,4 +20,6 @@ simple MobileApplication extends IdealApplication
 {
     parameters:
         @class(smile::algorithm::sf_tdoa::MobileApplication);
+        string mobilesLoggerModule = default("mobilesLog");
+        string mobileFramesLoggerModule = default("mobileFramesLog");
 }
