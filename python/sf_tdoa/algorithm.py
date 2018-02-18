@@ -18,9 +18,10 @@ import scipy.constants as scc
 
 import smile.algorithms.tdoa as tdoa
 from smile.results import Results
+from smile.filter import Filter
 
 
-def localize_mobile(anchors, beacons):
+def localize_mobile(mobile_node, anchors, frames):
     # Assume that all anchors has the same reply delay
     reply_delay = np.unique(anchors["beacon_reply_delay"])
     assert (reply_delay.shape == (1,))
@@ -30,18 +31,23 @@ def localize_mobile(anchors, beacons):
     c = scc.value('speed of light in vacuum')
     c = c * 1e-12  # m/s -> m/ps
 
+    frame_filer = Filter()
+    frame_filer.equal("node_mac_address", mobile_node["mac_address"])
+    mobile_frames = frame_filer.execute(frames)
+
     # Filter out all sequence numbers for which mobile node received less than three beacons
-    sequence_numbers, sequence_number_counts = np.unique(beacons["sequence_number"], return_counts=True)
+    sequence_numbers, sequence_number_counts = np.unique(mobile_frames["sequence_number"], return_counts=True)
     sequence_numbers = sequence_numbers[sequence_number_counts > 3]
 
     result = Results.create_array(sequence_numbers.size, position_dimensions=2)
+    result["mac_address"] = mobile_node["mac_address"]
 
     anchor_triples = ((0, 1, 2), (1, 2, 3))
     for i in range(sequence_numbers.size):
         sequence_number = sequence_numbers[i]
 
         # Extract beacons with specific sequence number
-        current_beacons = beacons[np.where(beacons["sequence_number"] == sequence_number)]
+        current_beacons = mobile_frames[np.where(mobile_frames["sequence_number"] == sequence_number)]
         positions = []
 
         # Evaluate different anchors sets
