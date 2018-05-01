@@ -15,8 +15,10 @@
 
 import numpy as np
 import scipy.constants as scc
+import itertools
 
 import smile.algorithms.tdoa as tdoa
+import algorithms.common as common
 from smile.results import Results
 from smile.filter import Filter
 
@@ -37,55 +39,72 @@ def localize_mobile(mobile_node, anchors, frames):
 
     # Filter out all sequence numbers for which mobile node received less than three beacons
     sequence_numbers, sequence_number_counts = np.unique(mobile_frames["sequence_number"], return_counts=True)
-    sequence_numbers = sequence_numbers[sequence_number_counts > 3]
+    sequence_numbers = sequence_numbers[sequence_number_counts >= 4]
 
     result = Results.create_array(sequence_numbers.size, position_dimensions=2)
     result["mac_address"] = mobile_node["mac_address"]
 
-    anchor_triples = ((0, 1, 2), (1, 2, 3))
     for i in range(sequence_numbers.size):
         sequence_number = sequence_numbers[i]
+        current_positions = []
 
         # Extract beacons with specific sequence number
         current_beacons = mobile_frames[np.where(mobile_frames["sequence_number"] == sequence_number)]
-        positions = []
+
+        # Set true position
+        result[i, "begin_true_position_3d"] = current_beacons[0, "begin_true_position_3d"]
+        result[i, "end_true_position_3d"] = current_beacons[3, "end_true_position_3d"]
 
         # Evaluate different anchors sets
-        for anchor_triple in anchor_triples:
-            # Compute distances between anchor pairs (first, second) and (second, third)
-            anchor_distances = np.zeros(2)
-            anchor_distances[0] = np.abs(np.linalg.norm(anchors[anchor_triple[1], "position_2d"] -
-                                                        anchors[anchor_triple[0], "position_2d"]))
-            anchor_distances[1] = np.abs(np.linalg.norm(anchors[anchor_triple[2], "position_2d"] -
-                                                        anchors[anchor_triple[1], "position_2d"]))
+        anchor_groups = [(0, 1, 2, 3)]
+        for anchor_indices in anchor_groups:
+
+            # Compute distances between consecutive pairs of anchors (first, second), (second, third) etc.
+            anchors_gaps = []
+            for anchor_index in itertools.islice(anchor_indices, len(anchor_indices) - 1):
+                gap = np.linalg.norm(anchors[(anchor_index + 1), "position_2d"] - anchors[anchor_index, "position_2d"])
+                anchors_gaps.append(gap)
 
             # Compute ToF between anchor pairs
-            anchor_tx_delays = anchor_distances / c + reply_delay
+            anchors_gaps = np.asarray(anchors_gaps)
+            anchors_gaps = (anchors_gaps / c) + reply_delay
 
             # Follow algorithm steps
-            anchor_coordinates = np.zeros((3, 2))
-            anchor_coordinates[0] = anchors[anchor_triple[1], "position_2d"]
-            anchor_coordinates[1] = anchors[anchor_triple[0], "position_2d"]
-            anchor_coordinates[2] = anchors[anchor_triple[2], "position_2d"]
+            anchor_coordinates = np.zeros((4, 2))
+            anchor_coordinates[0] = anchors[anchor_indices[0], "position_2d"]
+            anchor_coordinates[1] = anchors[anchor_indices[1], "position_2d"]
+            anchor_coordinates[2] = anchors[anchor_indices[2], "position_2d"]
+            anchor_coordinates[3] = anchors[anchor_indices[3], "position_2d"]
 
-            timestamp_differences = np.full(3, float('nan'))
-            timestamp_differences[1] = current_beacons[anchor_triple[1], "begin_clock_timestamp"] - \
-                                       current_beacons[anchor_triple[0], "begin_clock_timestamp"] - anchor_tx_delays[0]
-            timestamp_differences[2] = current_beacons[anchor_triple[2], "begin_clock_timestamp"] - \
-                                       current_beacons[anchor_triple[1], "begin_clock_timestamp"] - anchor_tx_delays[1]
+            timestamps = np.zeros(4)
+            timestamps[0] = current_beacons[anchor_indices[0], "begin_clock_timestamp"]
+            timestamps[1] = current_beacons[anchor_indices[1], "begin_clock_timestamp"]
+            timestamps[2] = current_beacons[anchor_indices[2], "begin_clock_timestamp"]
+            timestamps[3] = current_beacons[anchor_indices[3], "begin_clock_timestamp"]
+
+            timestamps[1] -= anchors_gaps[0]
+            timestamps[2] -= (anchors_gaps[0] + anchors_gaps[1])
+            timestamps[3] -= (anchors_gaps[0] + anchors_gaps[1] + anchors_gaps[2])
+
+            sorted_anchors_coordinates, sorted_timestamps = common.sort_measurements(anchor_coordinates, timestamps)
+
+            # Compute TDoA values
+            sorted_tdoa_distances = (sorted_timestamps - sorted_timestamps[0]) * c
 
             # Compute position
-            position = tdoa.doan_vesely(anchor_coordinates, timestamp_differences)
+            try:
+                positions = tdoa.chan_ho(sorted_anchors_coordinates, sorted_tdoa_distances)
 
-            positions.append(position)
-            result[i, "begin_true_position_3d"] = current_beacons[0, "begin_true_position_3d"]
-            result[i, "end_true_position_3d"] = current_beacons[2, "end_true_position_3d"]
+                # Choose better position
+                positions = [position for position in positions if tdoa.verify_position(position, sorted_anchors_coordinates, sorted_tdoa_distances)]
+                positions = [position for position in positions if common.does_area_contain_position(position, (0, 75), (75, 0))]
+                if positions:
+                    current_positions += positions
+                else:
+                    current_positions.append((np.nan, np.nan))
+            except ValueError:
+                current_positions.append((np.nan, np.nan))
 
-        # Choose better position
-        # TODO Propose better solution, for now just choose position being closer to (0, 0)
-        if np.abs(np.linalg.norm((0, 0) - positions[0])) < np.abs(np.linalg.norm((0, 0) - positions[1])):
-            result[i, "position_2d"] = positions[0]
-        else:
-            result[i, "position_2d"] = positions[1]
+        result[i, "position_2d"] = current_positions[0]
 
     return result
