@@ -39,4 +39,4 @@ class Simulation(smile.simulation.Simulation):
             else:
                 results = Results(np.concatenate((results, mobile_results), axis=0))
 
-        return results
+        return results, anchors

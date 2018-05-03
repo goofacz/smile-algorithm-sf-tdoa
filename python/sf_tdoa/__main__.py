@@ -26,9 +26,9 @@ if __name__ == '__main__':
     logs_directory_path = arguments.logs_directory_path[0]
 
     simulation = Simulation()
-    results = simulation.run_offline(logs_directory_path)
+    results, anchors = simulation.run_offline(logs_directory_path)
 
     unique_results = sa.squeeze_results(results)
     sv.plot_absolute_position_error_cdf(unique_results)
-    sv.plot_absolute_position_error_surface(unique_results)
+    sv.plot_absolute_position_error_surface(unique_results, anchors)
     sv.plot_absolute_position_error_histogram(unique_results)
