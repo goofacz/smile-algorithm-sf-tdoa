@@ -39,7 +39,7 @@ def localize_mobile(mobile_node, anchors, frames):
 
     # Filter out all sequence numbers for which mobile node received less than three beacons
     sequence_numbers, sequence_number_counts = np.unique(mobile_frames["sequence_number"], return_counts=True)
-    sequence_numbers = sequence_numbers[sequence_number_counts >= 4]
+    sequence_numbers = sequence_numbers[sequence_number_counts >= 3]
 
     result = Results.create_array(sequence_numbers.size, position_dimensions=2)
     result["mac_address"] = mobile_node["mac_address"]
@@ -52,11 +52,13 @@ def localize_mobile(mobile_node, anchors, frames):
         current_beacons = mobile_frames[np.where(mobile_frames["sequence_number"] == sequence_number)]
 
         # Set true position
-        result[i, "begin_true_position_3d"] = current_beacons[0, "begin_true_position_3d"]
-        result[i, "end_true_position_3d"] = current_beacons[3, "end_true_position_3d"]
+        true_begin_position = current_beacons[0, "begin_true_position_3d"]
+        true_end_position = current_beacons[0, "end_true_position_3d"]
+        result[i, "begin_true_position_3d"] = true_begin_position
+        result[i, "end_true_position_3d"] = true_end_position
 
         # Evaluate different anchors sets
-        anchor_groups = [(0, 1, 2, 3)]
+        anchor_groups = [(0, 1, 2)]
         for anchor_indices in anchor_groups:
 
             # Compute distances between consecutive pairs of anchors (first, second), (second, third) etc.
@@ -70,21 +72,18 @@ def localize_mobile(mobile_node, anchors, frames):
             anchors_gaps = (anchors_gaps / c) + reply_delay
 
             # Follow algorithm steps
-            anchor_coordinates = np.zeros((4, 2))
+            anchor_coordinates = np.zeros((3, 2))
             anchor_coordinates[0] = anchors[anchor_indices[0], "position_2d"]
             anchor_coordinates[1] = anchors[anchor_indices[1], "position_2d"]
             anchor_coordinates[2] = anchors[anchor_indices[2], "position_2d"]
-            anchor_coordinates[3] = anchors[anchor_indices[3], "position_2d"]
 
-            timestamps = np.zeros(4)
+            timestamps = np.zeros(3)
             timestamps[0] = current_beacons[anchor_indices[0], "begin_clock_timestamp"]
             timestamps[1] = current_beacons[anchor_indices[1], "begin_clock_timestamp"]
             timestamps[2] = current_beacons[anchor_indices[2], "begin_clock_timestamp"]
-            timestamps[3] = current_beacons[anchor_indices[3], "begin_clock_timestamp"]
 
             timestamps[1] -= anchors_gaps[0]
             timestamps[2] -= (anchors_gaps[0] + anchors_gaps[1])
-            timestamps[3] -= (anchors_gaps[0] + anchors_gaps[1] + anchors_gaps[2])
 
             sorted_anchors_coordinates, sorted_timestamps = common.sort_measurements(anchor_coordinates, timestamps)
 
@@ -93,10 +92,9 @@ def localize_mobile(mobile_node, anchors, frames):
 
             # Compute position
             try:
-                positions = tdoa.chan_ho(sorted_anchors_coordinates, sorted_tdoa_distances)
+                positions = tdoa.doan_vesely(sorted_anchors_coordinates, sorted_tdoa_distances)
 
                 # Choose better position
-                positions = [position for position in positions if tdoa.verify_position(position, sorted_anchors_coordinates, sorted_tdoa_distances)]
                 positions = [position for position in positions if common.does_area_contain_position(position, (0, 75), (75, 0))]
                 if positions:
                     current_positions += positions
