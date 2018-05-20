@@ -17,7 +17,7 @@ import os.path
 
 import numpy as np
 
-import smile.simulation
+import smile.simulation as ss
 from sf_tdoa.algorithm import localize_mobile
 from sf_tdoa.anchors import Anchors
 from smile.frames import Frames
@@ -25,8 +25,10 @@ from smile.nodes import Nodes
 from smile.results import Results
 
 
-class Simulation(smile.simulation.Simulation):
-    def run_offline(self, directory_path):
+class Simulation(ss.Simulation):
+    def run_offline(self, configuration, directory_path):
+        directory_path = os.path.expanduser(directory_path)
+
         anchors = Anchors.load_csv(os.path.join(directory_path, 'sf_tdoa_anchors.csv'))
         mobiles = Nodes.load_csv(os.path.join(directory_path, 'sf_tdoa_mobiles.csv'))
         frames = Frames.load_csv(os.path.join(directory_path, 'sf_tdoa_mobile_frames.csv'))
@@ -38,5 +40,10 @@ class Simulation(smile.simulation.Simulation):
                 results = mobile_results
             else:
                 results = Results(np.concatenate((results, mobile_results), axis=0))
+
+        nan_results = np.where(np.isnan(results["position_2d"]).all(axis=1))
+        nan_results_count = len(nan_results[0])
+
+        print('Success localizations: {0} / {1}'.format(len(results) - nan_results_count, len(results)))
 
         return results, anchors

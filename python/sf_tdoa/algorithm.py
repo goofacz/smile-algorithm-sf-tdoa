@@ -13,14 +13,15 @@
 # along with this program.  If not, see http:#www.gnu.org/licenses/.
 #
 
-import numpy as np
-import scipy.constants as scc
 import itertools
 
-import smile.algorithms.tdoa as tdoa
-import algorithms.common as common
-from smile.results import Results
+import numpy as np
+import scipy.constants as scc
+
+import smile.algorithms.common as common
 from smile.filter import Filter
+from smile.results import Results
+from smile.algorithms.tdoa.fang import Fang
 
 
 def localize_mobile(mobile_node, anchors, frames):
@@ -92,10 +93,12 @@ def localize_mobile(mobile_node, anchors, frames):
 
             # Compute position
             try:
-                positions = tdoa.doan_vesely(sorted_anchors_coordinates, sorted_tdoa_distances)
+                solver = Fang(sorted_anchors_coordinates, sorted_tdoa_distances)
+                positions = solver.localize()
 
                 # Choose better position
-                positions = [position for position in positions if common.does_area_contain_position(position, (0, 75), (75, 0))]
+                positions = [position for position in positions if
+                             common.does_area_contain_position(position, (0, 75), (75, 0))]
                 if positions:
                     current_positions += positions
                 else:
