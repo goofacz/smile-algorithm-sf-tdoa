@@ -13,14 +13,15 @@
 # along with this program.  If not, see http:#www.gnu.org/licenses/.
 #
 
+import importlib
 import itertools
 import os.path
-import importlib
 
 import numpy as np
 import scipy.constants as scc
 
 import smile.algorithms.common as common
+import smile.area as sarea
 import smile.simulation as ss
 from sf_tdoa.anchors import Anchors
 from smile.filter import Filter
@@ -36,7 +37,10 @@ class Simulation(ss.Simulation):
         solver_configuration = self._configuration['algorithms']['tdoa']['solver']
         solver_module = importlib.import_module(solver_configuration['module'])
         self._Solver = getattr(solver_module, solver_configuration['class'])
-        print(self._Solver)
+
+        area_configuration = self._configuration['area']
+        area_file_path = area_configuration['file']
+        self._area = sarea.Area(area_file_path)
 
     def run_offline(self, directory_path):
         directory_path = os.path.expanduser(directory_path)
@@ -134,8 +138,7 @@ class Simulation(ss.Simulation):
                     positions = solver.localize()
 
                     # Choose better position
-                    positions = [position for position in positions if
-                                 common.does_area_contain_position(position, (0, 75), (75, 0))]
+                    positions = [position for position in positions if self._area.contains(position)]
                     if positions:
                         current_positions += positions
                     else:
