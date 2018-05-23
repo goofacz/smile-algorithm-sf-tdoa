@@ -33,10 +33,10 @@ from smile.results import Results
 class Simulation(ss.Simulation):
     def __init__(self, configuration):
         self._configuration = configuration
+        self.solver_configuration = self._configuration['algorithms']['tdoa']['solver']
 
-        solver_configuration = self._configuration['algorithms']['tdoa']['solver']
-        solver_module = importlib.import_module(solver_configuration['module'])
-        self._Solver = getattr(solver_module, solver_configuration['class'])
+        solver_module = importlib.import_module(self.solver_configuration['module'])
+        self._Solver = getattr(solver_module, self.solver_configuration['class'])
 
         area_configuration = self._configuration['area']
         area_file_path = area_configuration['file']
@@ -134,7 +134,7 @@ class Simulation(ss.Simulation):
 
                 # Compute position
                 try:
-                    solver = self._Solver(sorted_anchors_coordinates, sorted_tdoa_distances)
+                    solver = self._Solver(sorted_anchors_coordinates, sorted_tdoa_distances, self.solver_configuration)
                     positions = solver.localize()
 
                     # Choose better position
