@@ -1,0 +1,10 @@
+{
+  "import": [
+    "smile/jsons/simulations/basic_area/analyze_configuration.json",
+    "smile/jsons/algorithms/tdoa/fang.json"
+  ],
+  "method_module": {
+    "path": "smile-algorithm-sf-tdoa/python",
+    "name": "sf_tdoa.simulation"
+  }
+}
